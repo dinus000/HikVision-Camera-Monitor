@@ -10,25 +10,26 @@ namespace MotionMonitor
 {
     internal class EmailHelper
     {
-        private const int MIN_FREQUENCY = 60 * 1000; // 1 minute
+        private const int MAX_FREQUENCY = 60 * 1000; // 1 minute
         private EmailConfig _emailConfig = null;
         private int _maxFrequency = 0;
         private const string EMAIL_NAME = "Motion Monitoring";
-        private long _lastSentTimeStamp = 0;
+        private IDictionary<string, long> _lastSent = new Dictionary<string, long>();
 
         public EmailHelper()
         {
             _emailConfig = AppConfig.GetEmailConfig();
             _maxFrequency = AppConfig.GetMaxEmailFrequency();
-            if (_maxFrequency < MIN_FREQUENCY)
+            if (_maxFrequency < MAX_FREQUENCY)
             {
-                _maxFrequency = MIN_FREQUENCY;
+                _maxFrequency = MAX_FREQUENCY;
             }
         }
         internal void Send(CameraEvent cameraEvent)
         {
-            if (Utils.GetTimeStampMs() - _lastSentTimeStamp < _maxFrequency)
+            if (!CanSendEmailNotification(cameraEvent))
             {
+                Logger.Debug($"[EmailHelper:Send] Ignoring sending email message.");
                 return;
             }
             try
@@ -66,10 +67,27 @@ namespace MotionMonitor
             {
                 Logger.Error($"[EmailHelper:Send] message: {ex.Message}.");
             }
-            finally
+        }
+        private bool CanSendEmailNotification(CameraEvent cameraEvent)
+        {
+            string key = GenerateUniqueKey(cameraEvent);
+
+            if (_lastSent.ContainsKey(key))
             {
-                _lastSentTimeStamp = Utils.GetTimeStampMs();
+                bool expired = (Utils.GetTimeStampMs() - _lastSent[key]) < _maxFrequency;
+                _lastSent[key] = Utils.GetTimeStampMs();
+
+                return expired;
             }
+
+            _lastSent.Add(key, Utils.GetTimeStampMs());
+
+            return true;
+        }
+
+        private string GenerateUniqueKey(CameraEvent cameraEvent)
+        {
+            return $"{cameraEvent.EventType}_{cameraEvent.IpAddress}";
         }
     }
 }
