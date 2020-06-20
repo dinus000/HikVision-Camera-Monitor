@@ -8,22 +8,37 @@ using System.Threading.Tasks;
 
 namespace MotionMonitor
 {
-    public class Utils
+    internal class Utils
     {
-        public static long IpAddressToLong(string addr)
+        internal static long IpAddressToLong(string addr)
         {
             return (long)(uint)IPAddress.NetworkToHostOrder((int)IPAddress.Parse(addr).Address);
         }
 
-        public static string LongToIpAddress(long address)
+        internal static string LongToIpAddress(long address)
         {
             // return IPAddress.Parse(address.ToString()).ToString();
             return new IPAddress((uint)IPAddress.HostToNetworkOrder((int) address)).ToString();
         }
 
-        public static long GetTimeStampMs()
+        internal static long GetTimeStampMs()
         {
             return (long)((double)Stopwatch.GetTimestamp() / (double)Stopwatch.Frequency * 1000.0);
+        }
+
+        internal static string GenerateKey(CameraEvent cameraEvent)
+        {
+            return $"{cameraEvent.IpAddress}_{cameraEvent.EventType}";
+        }
+
+        internal static string GenerateKey(AutomationCommand command)
+        {
+            return  $"{command.Device}_{command.Event}";
+        }
+
+        internal static string GenerateKey(CameraEvent cameraEvent, long id)
+        {
+            return $"{id}_{cameraEvent.EventType}";
         }
     }
 }

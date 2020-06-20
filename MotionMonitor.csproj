@@ -54,6 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AppConfig.cs" />
+    <Compile Include="Automation.cs" />
     <Compile Include="Dispatcher.cs" />
     <Compile Include="EmailHelper.cs" />
     <Compile Include="HttpService.cs" />

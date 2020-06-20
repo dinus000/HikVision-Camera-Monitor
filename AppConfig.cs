@@ -33,6 +33,14 @@ namespace MotionMonitor
         public string Password { get; set; }
     }
 
+    public class AutomationCommand
+    {
+        public string Device { get; set; }
+        public string Event { get; set; }
+        public string Item { get; set; }
+        public string Command { get; set; }
+    }
+
     public class SubscriptionEvents
     {
         public string Event { get; set; }
@@ -192,6 +200,27 @@ namespace MotionMonitor
             int value = 0;
 
             return int.TryParse(rawValue, out value) ? value : 0;
+        }
+
+        internal static string GetAutomationHost()
+        {
+            return ConfigurationManager.AppSettings["AutomationHost"];
+        }
+
+        internal static IDictionary<string, AutomationCommand> GetAutomationActions()
+        {
+            try
+            {
+                string configJson = ConfigurationManager.AppSettings["AutomationActions"];
+                var actions = JsonConvert.DeserializeObject<IEnumerable<AutomationCommand>>(configJson);
+
+                return actions.ToDictionary(a => Utils.GenerateKey(a), a => a);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"[AppConfig:GetAutomationActions] message: {ex.Message}");
+                return null;
+            }
         }
     }
 }

@@ -23,6 +23,7 @@ namespace MotionMonitor
         private EmailHelper _emailHelper;
         private Timer eventManager;
         private readonly object sync = new object();
+        private readonly string _automationHost = AppConfig.GetAutomationHost();
 
         internal Dispatcher(IEnumerable<SubscriptionEventsConfig> subscriptionEventsConfig)
         {
@@ -178,7 +179,7 @@ namespace MotionMonitor
         {
             if (IsEventComplete(cameraEvent))
             {
-                string completeEventKey = CreateCompleteEventKey(cameraEvent, id);
+                string completeEventKey = Utils.GenerateKey(cameraEvent, id);
                 if (!_completeEvents.ContainsKey(completeEventKey))
                 {
                     cameraEvent.TimeEnd = Utils.GetTimeStampMs();
@@ -193,6 +194,12 @@ namespace MotionMonitor
                     _completeEvents[completeEventKey] = completeEvent;
                     Logger.Debug($"[Dispatcher:SaveIfComplete] Added complete event: Type {_completeEvents[completeEventKey].EventType}, duration {_completeEvents[completeEventKey].TimeEnd - _completeEvents[completeEventKey].TimeStart}.");
                 }
+
+                // Check for any non-reporting actions such as Automation
+                if (!string.IsNullOrWhiteSpace(_automationHost))
+                {
+                    Automation.Process(_automationHost, cameraEvent);
+                }
             }
         }
         
@@ -206,12 +213,6 @@ namespace MotionMonitor
             }
 
             return SqlHelper.AddEvent(cameraEvent, _allEvents[cmdType]);
-        }
-
-        private string CreateCompleteEventKey(CameraEvent cameraEvent, long id)
-        {
-            // It may happen that we have several events of different types stored for the same device.
-            return $"{id}_{cameraEvent.EventType}";
         }
 
         private bool ShouldBeReported(CameraEvent cameraEvent)

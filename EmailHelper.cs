@@ -70,7 +70,7 @@ namespace MotionMonitor
         }
         private bool CanSendEmailNotification(CameraEvent cameraEvent)
         {
-            string key = GenerateUniqueKey(cameraEvent);
+            string key = Utils.GenerateKey(cameraEvent);
 
             if (_lastSent.ContainsKey(key))
             {
@@ -83,11 +83,6 @@ namespace MotionMonitor
             _lastSent.Add(key, Utils.GetTimeStampMs());
 
             return true;
-        }
-
-        private string GenerateUniqueKey(CameraEvent cameraEvent)
-        {
-            return $"{cameraEvent.EventType}_{cameraEvent.IpAddress}";
         }
     }
 }
